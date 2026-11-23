@@ -1,0 +1,10 @@
+# Static prototype — no build step. Drag the folder onto app.netlify.com/drop,
+# or connect the repo with publish directory "." and an empty build command.
+[build]
+  publish = "."
+  command = ""
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

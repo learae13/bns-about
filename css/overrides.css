@@ -1,0 +1,85 @@
+/* =========================================================================
+   Prototype overrides — make the saved Next.js render work as a static page.
+   Nothing here is part of the redesign; it only replaces what the site's JS did.
+   ========================================================================= */
+
+/* Type: licensed Neue Haas Grotesk Display Pro isn't bundled. Drop the font
+   files into assets/fonts/ and uncomment fonts.css in index.html to use it. */
+:root {
+  --font-sans: "Neue Haas Grotesk Display Pro", "Helvetica Neue", Helvetica, "Inter Tight", Arial, sans-serif;
+}
+
+/* nav: visible at the top, hides on scroll down, returns on scroll up (js/site.js) */
+.nav_desktop_root__pnKvU .nav_desktop_nav__IiIZw { background-color: var(--color-orange); }
+
+/* custom cursor + contact drawer + cookie UI are app features, not part of this page */
+.cursor_root__6TW1_, .contact_form_root__FyYof { display: none !important; }
+/* ...so bring the native cursor back (site.css hides it with cursor:none !important) */
+html, body, body.cursor-hidden, .slider_next_overlay_root__Ipnd6 { cursor: auto !important; }
+body a, body button, body [role=button] { cursor: pointer !important; }
+body input { cursor: text !important; }
+
+/* hero media: show the poster frame instead of the Vimeo stream */
+.media_player_imageCover__YvXid { opacity: 1 !important; }
+.media_player_controls__O_lxB { display: none !important; }
+
+/* GSAP left a few entrances mid-flight in the snapshot */
+.fade-in_root__3QNrq { transform: none !important; }
+
+/* Leadership: absolute, column-preserving layout driven by js/site.js (as on the live
+   site). Clicking a card expands it to full width with the bio; other cards keep their
+   column and move below it. Widths/heights/positions are set inline by the script. */
+.about_leadership_root__HE8TQ .about_leadership_cards__YAj24 { margin-bottom: 6.4rem; }
+.about_leadership_card__3IgOu .about_leadership_inner__o9lPC { position: relative !important; cursor: pointer; }
+.about_leadership_card__3IgOu .about_leadership_inner__o9lPC:focus-visible { outline: 2px solid var(--color-merlot); outline-offset: 4px; }
+.about_leadership_cardExpanded__sNVYQ .about_leadership_inner__o9lPC { cursor: default; }
+/* bumper: white strip over the inner card's bottom padding, masking the portrait as it slides down */
+.about_leadership_card__3IgOu .about_leadership_bumper__fKn8i {
+  left: 0 !important; right: 0 !important; bottom: 0 !important;
+  width: auto !important; height: 2.992rem !important;
+}
+.about_leadership_card__3IgOu .about_leadership_x__2rpEs { top: 2.992rem !important; right: 2.992rem !important; cursor: pointer; }
+.about_leadership_cardExpanded__sNVYQ .about_leadership_x__2rpEs { pointer-events: auto; }
+.about_leadership_card__3IgOu:not(.about_leadership_cardExpanded__sNVYQ) .about_leadership_x__2rpEs { pointer-events: none; }
+/* live keeps the spacing of "additional info" but shows none of its content */
+.about_leadership_card__3IgOu .about_leadership_additionalInfo__h7oaE > * { display: none !important; }
+/* portrait slides down just past the name + role (measured in js/site.js), so wrapped roles
+   aren't covered; replaces the live site's fixed 14/16/22rem */
+.about_leadership_root__HE8TQ .about_leadership_card__3IgOu .about_leadership_inner__o9lPC:hover .about_leadership_image__U9LGE,
+.about_leadership_root__HE8TQ .about_leadership_cardExpanded__sNVYQ .about_leadership_inner__o9lPC .about_leadership_image__U9LGE {
+  transform: translateY(var(--lead-reveal, 14rem)) !important;
+}
+/* bio stays clipped off to the right until the card expands */
+.about_leadership_card__3IgOu .about_leadership_bio__V4lkh { vertical-align: top; }
+@media (prefers-reduced-motion: reduce) {
+  .about_leadership_root__HE8TQ .about_leadership_card__3IgOu,
+  .about_leadership_root__HE8TQ .about_leadership_image__U9LGE,
+  .about_leadership_root__HE8TQ .about_leadership_bio__V4lkh { transition: none !important; }
+}
+
+/* Quotes: simple crossfade instead of Swiper */
+.slider_next_overlay_root__Ipnd6 .swiper-wrapper { display: grid !important; transform: none !important; }
+.slider_next_overlay_root__Ipnd6 .swiper-slide {
+  grid-area: 1 / 1; width: 100% !important;
+  opacity: 0; visibility: hidden; transition: opacity .5s ease, visibility .5s;
+}
+.slider_next_overlay_root__Ipnd6 .swiper-slide.is-active { opacity: 1; visibility: visible; }
+
+/* Marquee */
+.marquee-text_marqueeTrack__2qvS8 > div { margin-left: 0 !important; }
+.marquee-text_marqueeTrack__2qvS8 { width: max-content; animation: bns-marquee var(--marquee-duration, 30s) linear infinite; }
+@keyframes bns-marquee { to { transform: translateX(calc(var(--marquee-shift, 33.333%) * -1)); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-text_marqueeTrack__2qvS8 { animation: none; }
+}
+
+
+/* card masks are always centred while js/site.js animates their width */
+.card_mask_root__qqQj9 { margin-left: auto !important; margin-right: auto !important; }
+
+/* hero media keeps its 16:9 box without the <video> element */
+.media_player_root__DdeGj { position: relative; width: 100%; }
+
+/* Services accordion stays collapsed; keep its (placeholder) illustrations inside it */
+.about_capability_body__jMlpJ { overflow: hidden; }

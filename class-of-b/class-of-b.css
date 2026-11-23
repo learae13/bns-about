@@ -1,0 +1,215 @@
+/* =========================================================================
+   Class Of — version B (sortable roster + expanding cards)
+   Type uses the site's own classes (typo-h3 for names, typo-p3 for small text).
+   ========================================================================= */
+
+.cob {
+  position: relative;
+  z-index: 49;
+
+  /* tokens */
+  --cob-name: var(--color-merlot);
+  --cob-accent: var(--color-white);      /* group titles, sort tabs, hover */
+  --cob-card-bg: var(--color-white);
+  --cob-pad: 2.992rem;                   /* same inner padding as Leadership cards */
+  --cob-radius: max(2rem, 2vw);
+  --cob-ease: cubic-bezier(.25, 1, .5, 1);
+  --cob-portrait: 42%;
+  --cob-role-size: 2.7rem;               /* card job title */
+  --cob-role-leading: 3.6rem;
+}
+
+/* heading: rule, then title (left) and sort tabs (right) starting on the same line */
+.cob__head { padding-bottom: 0; }
+.cob__head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;                 /* first sort tab sits on the title's baseline */
+  gap: 2.4rem;
+}
+.cob__title { margin: 0; }
+
+.cob__sorts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.cob__sort {
+  color: var(--cob-accent);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: right;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: .2em;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color .2s ease, opacity .2s ease;
+}
+.cob__sort:hover, .cob__sort.is-active { text-decoration-color: currentColor; }
+.cob__sort:focus-visible { outline: 2px solid var(--cob-accent); outline-offset: 2px; }
+
+/* roster */
+.cob__list { margin-top: 6.4rem; align-items: start; }
+@media (min-width: 1024px) { .cob__list { margin-top: 9.6rem; } }
+
+.cob__col { grid-column: span 4 / span 4; }
+@media (min-width: 768px) { .cob__col { grid-column: span 6 / span 6; } }
+
+.cob__group { margin-bottom: 4.8rem; }
+.cob__group-title { color: var(--cob-accent); margin: 0; }
+.cob__people { list-style: none; margin: 0; padding: 0; }
+
+.cob__line {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: var(--cob-name);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: color .15s ease;
+}
+.cob__line:hover { color: var(--cob-accent); }
+.cob__line:focus-visible { outline: 2px solid var(--cob-accent); outline-offset: 2px; }
+
+/* ---------- expanding card ---------- */
+/* clip only vertically while the height animates, so the card can bleed sideways */
+.cob__person.is-open, .cob__person.is-closing { clip-path: inset(0 -100vw); }
+.cob__card { display: none; }
+.cob__person.is-open .cob__line, .cob__person.is-closing .cob__line { display: none; }
+.cob__person.is-open .cob__card, .cob__person.is-closing .cob__card { display: block; }
+
+.cob__card {
+  position: relative;
+  margin: 1.2rem 0 2.4rem;
+  padding: var(--cob-pad);
+  background: var(--cob-card-bg);
+  border-radius: var(--cob-radius);
+  isolation: isolate;
+}
+/* bleed the card so its text lines up with the list */
+@media (min-width: 768px) {
+  .cob__card { margin-left: calc(var(--cob-pad) * -1); margin-right: calc(var(--cob-pad) * -1); }
+  /* left of two columns: bleed outward only, never into the gap beside the right column */
+  .cob__col:first-child:not(.cob__col--single) .cob__card { margin-right: 0; }
+}
+
+.cob__card-head {
+  position: absolute;
+  top: var(--cob-pad);
+  left: var(--cob-pad);
+  width: calc((100% - var(--cob-pad) * 2) * .42);
+  padding-bottom: var(--cob-pad);        /* gap above the portrait = the card's own padding */
+  white-space: normal;
+}
+.cob__card-name { display: block; color: var(--color-merlot); }
+.cob__card-role {
+  display: block;
+  margin-top: .4rem;
+  color: var(--color-orange);
+  font-size: var(--cob-role-size);
+  line-height: var(--cob-role-leading);
+  text-wrap: balance;                    /* titles too long for one line split evenly, never truncate */
+}
+
+.cob__close {
+  position: absolute;
+  top: var(--cob-pad);
+  right: var(--cob-pad);
+  width: 3.2rem;
+  height: 3.2rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-merlot);
+  cursor: pointer;
+  z-index: 2;
+}
+.cob__close svg { width: 100%; height: 100%; display: block; }
+.cob__close:focus-visible { outline: 2px solid var(--color-merlot); outline-offset: 4px; }
+
+.cob__card-body {
+  display: grid;
+  grid-template-columns: var(--cob-portrait) 1fr;
+  column-gap: var(--cob-pad);
+  align-items: start;
+}
+
+/* portrait + links: start over the name, slide down to reveal it (Leadership motion) */
+.cob__media {
+  position: relative;
+  z-index: 1;
+  margin-top: var(--cob-reveal, 10rem);
+  transform: translateY(calc(var(--cob-reveal, 10rem) * -1));
+  transition: transform .4s var(--cob-ease);
+}
+.cob__card.is-revealed .cob__media { transform: none; }
+.cob__portrait {
+  position: relative;
+  aspect-ratio: .7784431138;
+  background: #c4c4c4;
+}
+.cob__portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* "Additional information" links under the portrait (styled like the live Leadership cards) */
+.cob__links {
+  margin-top: 2.4rem;
+  color: var(--color-merlot);
+  opacity: 0;
+  transition: opacity .4s ease .1s;
+}
+.cob__card.is-revealed .cob__links { opacity: 1; }
+.cob__links-title {
+  margin: 0 0 .8rem;
+  font-size: 1.6rem;
+  line-height: 3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.cob__links ul { margin: 0; padding: 0; list-style: none; }
+.cob__link {
+  display: inline-flex;
+  align-items: center;
+  gap: .8rem;
+  color: var(--color-orange);
+  font-size: 1.8rem;                     /* same as the bio and its Department / Studio labels */
+  line-height: 2.4rem;
+  text-decoration: none;
+}
+.cob__link svg { width: 1.4rem; height: 1.4rem; opacity: 0; transform: translateX(-.4rem); transition: opacity .2s, transform .2s; }
+.cob__link:hover svg, .cob__link:focus-visible svg { opacity: 1; transform: none; }
+.cob__link:focus-visible { outline: 2px solid var(--color-orange); outline-offset: 2px; }
+
+.cob__bio {
+  padding-right: 4.8rem;            /* clear of the close button */
+  color: var(--color-merlot);
+  font-size: 1.8rem;
+  line-height: 2.4rem;
+  opacity: 0;
+  transition: opacity .4s ease .1s;
+}
+.cob__card.is-revealed .cob__bio { opacity: 1; }
+.cob__bio p { margin: 0 0 1em; }
+.cob__bio p:last-child { margin-bottom: 0; }
+.cob__bio-placeholder { opacity: .6; }
+
+.cob__meta { margin: 0 0 2.4rem; }
+.cob__meta div { display: flex; gap: .6em; }
+.cob__meta dt { color: var(--color-orange); }
+.cob__meta dd { margin: 0; }
+
+/* narrow: stack portrait and bio */
+@media (max-width: 767px) {
+  .cob__card-head { position: static; width: auto; padding-right: 4.8rem; padding-bottom: 0; }
+  .cob__card-body { display: block; }
+  .cob__media { margin-top: 1.6rem; transform: translateY(-2rem); }
+  .cob__portrait { width: 70%; }
+  .cob__bio { margin-top: 2.4rem; padding-right: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cob__line, .cob__media, .cob__links, .cob__link svg, .cob__bio, .cob__sort { transition: none; }
+}

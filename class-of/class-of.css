@@ -1,0 +1,79 @@
+/* =========================================================================
+   Class Of — isolated module (baseline = live site behaviour, Nov 2026)
+   Everything for this section lives in /class-of. Swap this file, class-of.js
+   or people.js to try redesign variants without touching the rest of the page.
+   ========================================================================= */
+
+.class-of {
+  position: relative;
+  z-index: 49;
+  max-width: 100vw;
+
+  /* tokens — tweak here for variants */
+  --co-size: 2.4rem;
+  --co-leading: 3rem;
+  --co-color: inherit;            /* page text colour (merlot) */
+  --co-hover-color: var(--color-white);
+  --co-portrait: 325px;
+}
+@media (min-width: 768px) {
+  .class-of { --co-size: 3.6rem; --co-leading: 4rem; }
+}
+
+.class-of__list { font-size: var(--co-size); line-height: var(--co-leading); }
+
+.class-of__person { font-size: var(--co-size); line-height: var(--co-leading); }
+
+.class-of__word {
+  position: relative;
+  display: inline-block;
+  font: inherit;
+  font-size: var(--co-size);
+  line-height: var(--co-leading);
+  color: var(--co-color);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: color .15s ease;
+  will-change: color;
+}
+.class-of__word.is-hovered { color: var(--co-hover-color) !important; }
+.class-of__word:focus-visible { outline: 2px solid var(--co-hover-color); outline-offset: 2px; }
+
+.class-of__sep { margin: 0 .1em; font-size: var(--co-size); line-height: var(--co-leading); }
+
+/* hover portrait — follows the hovered name, masked with a random BNS shape */
+.class-of__portrait {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--co-portrait);
+  aspect-ratio: 1;
+  pointer-events: none;
+  z-index: 2;
+  transform: scale(0);
+  transform-origin: 50% 50%;
+}
+.class-of__portrait-mask {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: 100%;
+          mask-position: 100%;
+  -webkit-mask-size: contain;
+          mask-size: contain;
+}
+.class-of__portrait img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .class-of__word { transition: none; }
+}

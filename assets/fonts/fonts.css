@@ -1,0 +1,16 @@
+/* Neue Haas Grotesk Display Pro — loaded from the copy installed on this machine
+   (~/Library/Fonts) via local(). No font files are bundled or fetched from the live site.
+   Weights mirror the live site's @font-face set. To ship the font with the prototype,
+   add licensed .woff2 files here and put a url() after each local(). */
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 100; font-style: normal; font-display: swap; src: local("NeueHaasDisplay-Thin"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 100; font-style: italic; font-display: swap; src: local("NeueHaasDisplay-ThinItalic"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 300; font-style: normal; font-display: swap; src: local("NeueHaasDisplay-Light"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 300; font-style: italic; font-display: swap; src: local("NeueHaasDisplay-LightItalic"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 400; font-style: normal; font-display: swap; src: local("NeueHaasDisplay-Roman"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 400; font-style: italic; font-display: swap; src: local("NeueHaasDisplay-RomanItalic"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 500; font-style: normal; font-display: swap; src: local("NeueHaasDisplay-Mediu"), local("NeueHaasDisplay-Medium"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 500; font-style: italic; font-display: swap; src: local("NeueHaasDisplay-MediumItalic"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 700; font-style: normal; font-display: swap; src: local("NeueHaasDisplay-Bold"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 700; font-style: italic; font-display: swap; src: local("NeueHaasDisplay-BoldItalic"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 900; font-style: normal; font-display: swap; src: local("NeueHaasDisplay-Black"); }
+@font-face { font-family: "Neue Haas Grotesk Display Pro"; font-weight: 900; font-style: italic; font-display: swap; src: local("NeueHaasDisplay-BlackItalic"); }
