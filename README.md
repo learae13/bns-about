@@ -1,7 +1,7 @@
-# BNS About page — Class Of redesign prototype
+# BNS About page — "Class Of.." redesign
 
 Static copy of brandnewschool.com/about (snapshot, Nov 2026) for prototyping
-the **Class Of** section. No framework, no build step, no tracking.
+the **Class Of** section.
 
 ## Run locally
 Use a local server (mask images don't load from file://):
@@ -10,13 +10,6 @@ Use a local server (mask images don't load from file://):
 
 Type: Neue Haas Grotesk Display Pro loads from the copy installed on this Mac
 (assets/fonts/fonts.css, via local()). Without it, Helvetica Neue is used.
-
-All images are grey placeholders (same dimensions as the originals, so the
-layout matches). Nothing loads from BNS servers.
-
-## Deploy
-Drag this folder onto https://app.netlify.com/drop, or connect a repo
-(publish dir `.`, no build command). Pages are served `noindex`.
 
 ## Structure
     index.html            the page; Class Of is a mount point marked with comments
@@ -43,18 +36,6 @@ The choice is kept in the URL, so `?v=b` links straight to B.
                       opens a full-screen sheet of that department's people as masked portraits;
                       ← → step through departments. Card pictures: DEPT_IMAGES in class-of-c.js
     js/version-switcher.js, css/version-switcher.css   the switcher itself
-
-To add C: copy `class-of-b/` to `class-of-c/`, change its registration line to
-`CLASS_OF_VERSIONS.c = {...}`, and link its CSS and JS in index.html. Its
-button turns on by itself. D works the same way.
-
-Roster fields used by B (in class-of/people.js): `dept` is derived from job titles
-(check it), `studio` is a PLACEHOLDER assigned in rotation, and `leadership` marks
-people who also appear in the Leadership section.
-
-## Leadership cards
-Clicking a card opens it full width with the bio, as on the live site (js/site.js).
-Other cards stay in their columns and move below it. Close with × or Esc.
 
 ## Notes
 - Type falls back to Helvetica Neue (Mac/iOS) or Inter Tight (elsewhere).
