@@ -4,30 +4,29 @@
    - clicking a card opens a full-screen "department sheet" (native <dialog>):
        merlot background, big orange count + department title, then everyone in that
        department as a portrait cut into one of the brand mask shapes (same shapes as
-       version A's hover portraits). Portraits pop in one after another; hovering one
-       swaps its shape. Previous / next arrows step through departments; Esc or × closes.
+       version A's hover portraits). Portraits pop in one after another.
+       Previous / next arrows step through departments; Esc or × closes.
    Data: class-of/people.js (`dept`). Card pictures are grey placeholders: set
    DEPT_IMAGES below to real files when they exist.
+
+   The department data, card contents and sheet are shared on window.CLASS_OF_DEPTS so
+   version D (class-of-d/) can use them with a different card layout.
 */
-(window.CLASS_OF_VERSIONS = window.CLASS_OF_VERSIONS || {}).c = {
-  label: 'Department cards',
-  mount(mount) {
-    const data = window.CLASS_OF;
-    if (!data || !mount) return;
+window.CLASS_OF_DEPTS = (() => {
+  const PORTRAIT = 'class-of/portrait-placeholder.svg';
+  const CARD_PLACEHOLDER = 'class-of/portrait-placeholder.svg';
+  const DEPT_IMAGES = {
+    // 'Design': 'assets/img/dept-design.jpg',
+  };
+  const MASKS = ['circle1', 'flower1', 'square1', 'cross1', 'flower2', 'square2', 'cross2', 'flower3', 'bars'];
+  const DEPT_ORDER = ['Executive Leadership', 'Creative', 'Design', 'Motion & Animation', 'CG & VFX', 'Editorial',
+    'Creative Technology', 'Production', 'Partnerships & Marketing', 'Operations'];
+  const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const maskUrl = name => `url('class-of/masks/${name}.svg')`; // single quotes: used inside style="…"
 
-    const PORTRAIT = 'class-of/portrait-placeholder.svg';
-    const CARD_PLACEHOLDER = 'class-of/portrait-placeholder.svg';
-    const DEPT_IMAGES = {
-      // 'Design': 'assets/img/dept-design.jpg',
-    };
-    const MASKS = ['circle1', 'flower1', 'square1', 'cross1', 'flower2', 'square2', 'cross2', 'flower3', 'bars'];
-    const DEPT_ORDER = ['Executive Leadership', 'Creative', 'Design', 'Motion & Animation', 'CG & VFX', 'Editorial',
-      'Creative Technology', 'Production', 'Partnerships & Marketing', 'Operations'];
-    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    const maskUrl = name => `url('class-of/masks/${name}.svg')`; // single quotes: used inside style="…"
-
-    // ---------- data ----------
+  // people sorted by name, grouped into departments in DEPT_ORDER
+  function groups(data) {
     const people = [...data.people].filter(p => p.name && p.role).sort((a, b) => a.name.localeCompare(b.name));
     const byDept = new Map();
     people.forEach(p => {
@@ -38,29 +37,30 @@
     const depts = [...byDept.keys()]
       .sort((a, b) => (DEPT_ORDER.indexOf(a) + 1 || 99) - (DEPT_ORDER.indexOf(b) + 1 || 99))
       .map(title => ({ title, people: byDept.get(title) }));
+    return { people, depts };
+  }
 
-    // ---------- markup ----------
-    mount.classList.add('coc', 'container', 'spacer-xl');
-    mount.innerHTML = `
-      <div class="section_head_root__HtR3K coc__head">
-        <div class="section_head_line__TwGZz"></div>
-        <div class="coc__head-row">
-          <h2 class="section_head_title__TyGM4 coc__title">${esc(data.headline)}</h2>
-          <p class="coc__summary typo-p3">${people.length} people, ${depts.length} departments</p>
-        </div>
+  // section heading: rule, title left, summary right
+  const head = (data, people, depts) => `
+    <div class="section_head_root__HtR3K coc__head">
+      <div class="section_head_line__TwGZz"></div>
+      <div class="coc__head-row">
+        <h2 class="section_head_title__TyGM4 coc__title">${esc(data.headline)}</h2>
+        <p class="coc__summary typo-p3">${people.length} people, ${depts.length} departments</p>
       </div>
-      <ul class="coc__grid">
-        ${depts.map((d, i) => `
-          <li>
-            <button type="button" class="coc__card" data-i="${i}" aria-haspopup="dialog">
-              <span class="coc__card-img"><img alt="" loading="lazy" src="${esc(DEPT_IMAGES[d.title] || CARD_PLACEHOLDER)}"></span>
-              <span class="coc__card-text">
-                <span class="coc__count">${d.people.length}</span>
-                <span class="coc__dept">${esc(d.title)}</span>
-              </span>
-            </button>
-          </li>`).join('')}
-      </ul>
+    </div>`;
+
+  // inside of a department card: picture, count, name. The button around it needs data-dept="<index>".
+  const cardInner = d => `
+    <span class="coc__card-img"><img alt="" loading="lazy" src="${esc(DEPT_IMAGES[d.title] || CARD_PLACEHOLDER)}"></span>
+    <span class="coc__card-text">
+      <span class="coc__count">${d.people.length}</span>
+      <span class="coc__dept">${esc(d.title)}</span>
+    </span>`;
+
+  // adds the department sheet to `mount` and opens it from any [data-dept] button inside mount
+  function attachSheet(mount, depts) {
+    mount.insertAdjacentHTML('beforeend', `
       <dialog class="coc__sheet" aria-labelledby="coc-sheet-title">
         <div class="coc__sheet-inner container">
           <header class="coc__sheet-head">
@@ -82,7 +82,7 @@
           </header>
           <ul class="coc__people"></ul>
         </div>
-      </dialog>`;
+      </dialog>`);
 
     const sheet = mount.querySelector('.coc__sheet');
     const sheetCount = sheet.querySelector('.coc__sheet-count');
@@ -90,7 +90,6 @@
     const peopleList = sheet.querySelector('.coc__people');
     let currentDept = -1, opener = null, closing = null; // closing = the running close animation
 
-    // ---------- sheet ----------
     function fill(i) {
       currentDept = (i + depts.length) % depts.length;
       const d = depts[currentDept];
@@ -98,10 +97,10 @@
       sheetTitle.textContent = d.title;
       sheetTitle.setAttribute('aria-label', `${d.title}, ${d.people.length} ${d.people.length === 1 ? 'person' : 'people'}`);
       peopleList.innerHTML = d.people.map((p, j) => {
-        const mask = MASKS[(j + currentDept) % MASKS.length];
+        const m = (j + currentDept) % MASKS.length;
         return `
           <li class="coc__person" style="--i:${j}">
-            <span class="coc__portrait" data-mask="${(j + currentDept) % MASKS.length}" style="-webkit-mask-image:${maskUrl(mask)};mask-image:${maskUrl(mask)}">
+            <span class="coc__portrait" style="-webkit-mask-image:${maskUrl(MASKS[m])};mask-image:${maskUrl(MASKS[m])}">
               <img alt="" src="${PORTRAIT}" style="object-position:${esc(p.focus || '50% 50%')}">
             </span>
             <span class="coc__name">${esc(p.name)}</span>
@@ -111,16 +110,6 @@
       sheet.scrollTop = 0;
     }
 
-    // hover / focus a portrait: switch to the next shape
-    peopleList.addEventListener('pointerover', e => {
-      const li = e.target.closest('.coc__person');
-      if (!li || li.contains(e.relatedTarget)) return;
-      const el = li.querySelector('.coc__portrait');
-      const next = (Number(el.dataset.mask) + 1) % MASKS.length;
-      el.dataset.mask = next;
-      el.style.webkitMaskImage = el.style.maskImage = maskUrl(MASKS[next]);
-    });
-
     function open(i, from) {
       // drop any close animation still running or held, or the sheet reopens invisible
       if (closing) { closing.onfinish = null; closing = null; }
@@ -129,7 +118,7 @@
       fill(i);
       if (!sheet.open) sheet.showModal();
       document.documentElement.classList.add('coc-locked');
-      if (!reduceMotion) sheet.animate(
+      if (!reduceMotion()) sheet.animate(
         [{ transform: 'translateY(6%)', opacity: 0 }, { transform: 'none', opacity: 1 }],
         { duration: 450, easing: 'cubic-bezier(.16,1,.3,1)' });
       sheet.querySelector('.coc__close').focus();
@@ -145,7 +134,7 @@
         document.documentElement.classList.remove('coc-locked');
         opener?.focus();
       };
-      if (reduceMotion) return done();
+      if (reduceMotion()) return done();
       closing = sheet.animate([{ opacity: 1 }, { transform: 'translateY(4%)', opacity: 0 }],
         { duration: 220, easing: 'cubic-bezier(.55,.085,.68,.53)', fill: 'forwards' });
       closing.onfinish = done;
@@ -153,12 +142,14 @@
 
     function step(dir) {
       fill(currentDept + dir);
-      opener = mount.querySelector(`.coc__card[data-i="${currentDept}"]`);
-      if (!reduceMotion) peopleList.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
+      opener = mount.querySelector(`[data-dept="${currentDept}"]`);
+      if (!reduceMotion()) peopleList.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
     }
 
-    mount.querySelectorAll('.coc__card').forEach(card =>
-      card.addEventListener('click', () => open(Number(card.dataset.i), card)));
+    mount.addEventListener('click', e => {
+      const card = e.target.closest('[data-dept]');
+      if (card && mount.contains(card) && !sheet.contains(card)) open(Number(card.dataset.dept), card);
+    });
     sheet.querySelector('.coc__close').addEventListener('click', close);
     sheet.querySelectorAll('.coc__nav[data-step]').forEach(b =>
       b.addEventListener('click', () => step(Number(b.dataset.step))));
@@ -167,5 +158,26 @@
       if (e.key === 'ArrowRight') step(1);
       if (e.key === 'ArrowLeft') step(-1);
     });
+  }
+
+  return { groups, head, cardInner, attachSheet, esc };
+})();
+
+(window.CLASS_OF_VERSIONS = window.CLASS_OF_VERSIONS || {}).c = {
+  label: 'Department cards',
+  mount(mount) {
+    const data = window.CLASS_OF;
+    if (!data || !mount) return;
+    const D = window.CLASS_OF_DEPTS;
+    const { people, depts } = D.groups(data);
+
+    mount.classList.add('coc', 'container', 'spacer-xl');
+    mount.innerHTML = `
+      ${D.head(data, people, depts)}
+      <ul class="coc__grid">
+        ${depts.map((d, i) => `
+          <li><button type="button" class="coc__card" data-dept="${i}" aria-haspopup="dialog">${D.cardInner(d)}</button></li>`).join('')}
+      </ul>`;
+    D.attachSheet(mount, depts);
   },
 };

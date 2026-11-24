@@ -1,0 +1,50 @@
+/* =========================================================================
+   Class Of — version D (department mosaic). Builds on class-of-c.css:
+   the section also has the .coc class, so C's tokens, card and sheet styles apply.
+   ========================================================================= */
+
+.cod__mosaic {
+  position: relative;
+  margin: 6.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  column-gap: var(--coc-gap);            /* read by class-of-d.js as the gutter between tiles */
+}
+@media (min-width: 1024px) { .cod__mosaic { margin-top: 9.6rem; } }
+
+.cod__cell { position: absolute; }       /* left / top / width / height set by class-of-d.js */
+
+.cod__tile {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  container-type: size;                  /* text follows the tile's smaller side */
+}
+
+/* text: the same inset and label size on every tile, so they line up as one system */
+.cod {
+  --cod-inset: 1.4rem;
+  --cod-label: 1.6rem;
+  --cod-count-max: 12rem;                /* count size for the biggest department */
+}
+@media (min-width: 768px)  { .cod { --cod-inset: 2.4rem; --cod-label: 2rem; --cod-count-max: 16rem; } }
+@media (min-width: 1440px) { .cod { --cod-inset: 3.2rem; --cod-label: 2.4rem; --cod-count-max: 20rem; } }
+
+.cod__tile .coc__card-text {
+  left: var(--cod-inset);
+  right: var(--cod-inset);
+  bottom: var(--cod-inset);
+}
+/* count grows with head-count: --cod-count per tile = √(count ÷ biggest) × --cod-count-max,
+   or less if that tile is too small for it (set in class-of-d.js) */
+.cod__tile .coc__count { font-size: var(--cod-count, 6.4rem); }
+.cod__tile .coc__dept {
+  margin-top: .4rem;
+  font-size: min(var(--cod-label), 15cqw); /* safety net only: the layout picker avoids tiles this narrow */
+  line-height: 1.2;
+  hyphens: auto;                         /* a long word in a narrow tile breaks instead of clipping */
+}
+
+/* tiles settle into place when the layout changes size */
+.cod__cell { transition: left .5s var(--coc-ease), top .5s var(--coc-ease), width .5s var(--coc-ease), height .5s var(--coc-ease); }
+@media (prefers-reduced-motion: reduce) { .cod__cell { transition: none; } }

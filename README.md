@@ -35,6 +35,9 @@ The choice is kept in the URL, so `?v=b` links straight to B.
     class-of-c/    C: department picture cards (head-count + department on each). Clicking one
                       opens a full-screen sheet of that department's people as masked portraits;
                       ← → step through departments. Card pictures: DEPT_IMAGES in class-of-c.js
+    class-of-d/    D: same cards and sheet as C, laid out as an irregular mosaic where each
+                      tile's area is proportional to the department's head-count (treemap).
+                      Uses C's shared code (window.CLASS_OF_DEPTS), so C must load first.
     js/version-switcher.js, css/version-switcher.css   the switcher itself
 
 ## Notes

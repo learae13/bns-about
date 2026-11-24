@@ -7,7 +7,7 @@
    CSS and JS in index.html. Its button lights up automatically. */
 (function () {
   const versions = window.CLASS_OF_VERSIONS || {};
-  const KEYS = ['a', 'b', 'c']; // add 'd' here when class-of-d/ exists
+  const KEYS = ['a', 'b', 'c', 'd'];
   const STORE = 'bns-class-of-version';
   let section = document.querySelector('[data-class-of]');
   if (!section) return;
