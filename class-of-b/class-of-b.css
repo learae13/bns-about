@@ -1,11 +1,15 @@
 /* =========================================================================
    Class Of — version B (sortable roster + expanding cards)
-   Type uses the site's own classes (typo-h3 for names, typo-p3 for small text).
+   Type uses the site's own classes: typo-p2 for roster lines (as on brandnewschool.com/contact),
+   typo-h3 for group titles, typo-p3 for small text.
    ========================================================================= */
 
 .cob {
   position: relative;
   z-index: 49;
+  /* class-of-b.js scrolls the opened card into place itself; the browser's scroll anchoring
+     would also shift the page when a card above collapses, and the two fight */
+  overflow-anchor: none;
 
   /* tokens */
   --cob-name: var(--color-merlot);
@@ -15,8 +19,21 @@
   --cob-radius: max(2rem, 2vw);
   --cob-ease: cubic-bezier(.25, 1, .5, 1);
   --cob-portrait: 42%;
-  --cob-role-size: 2.7rem;               /* card job title */
+  --cob-portrait-max: 36rem;             /* column 1 never grows past this on big monitors */
+  --cob-role-size: 2.7rem;               /* card name + job title */
   --cob-role-leading: 3.6rem;
+  --cob-text: 1.8rem;                    /* card bio, department, location, links */
+  --cob-text-leading: 2.4rem;
+  --cob-label: 1.6rem;                   /* "Additional information" */
+}
+/* card type scales up with the site's own type (typo-p2/p3 step up at 1440 and 1920) */
+@media (min-width: 1440px) {
+  .cob { --cob-role-size: 3.2rem; --cob-role-leading: 4.2rem; --cob-text: 2.2rem; --cob-text-leading: 3rem; --cob-label: 1.8rem; --cob-portrait-max: 40rem;
+         --cob-pad: 4rem; }               /* padding keeps pace with the corner radius (2vw) */
+}
+@media (min-width: 1920px) {
+  .cob { --cob-role-size: 3.6rem; --cob-role-leading: 4.8rem; --cob-text: 2.4rem; --cob-text-leading: 3.2rem; --cob-label: 2rem; --cob-portrait-max: 44rem;
+         --cob-pad: 4.8rem; }
 }
 
 /* heading: rule, then title (left) and sort tabs (right) starting on the same line */
@@ -60,6 +77,7 @@
 .cob__group { margin-bottom: 4.8rem; }
 .cob__group-title { color: var(--cob-accent); margin: 0; }
 .cob__people { list-style: none; margin: 0; padding: 0; }
+.cob__person { display: flow-root; }   /* keep the card's margins inside the row, so its measured height is exact */
 
 .cob__line {
   display: block;
@@ -97,23 +115,20 @@
   .cob__col:first-child:not(.cob__col--single) .cob__card { margin-right: 0; }
 }
 
+/* column 1, top to bottom: image, name, title, department, location, additional info */
+.cob__side { display: flex; flex-direction: column; }
+.cob__details { margin-top: 2.4rem; }
+
+/* name and title: same size and weight, told apart by colour */
 .cob__card-head {
-  position: absolute;
-  top: var(--cob-pad);
-  left: var(--cob-pad);
-  width: calc((100% - var(--cob-pad) * 2) * .42);
-  padding-bottom: var(--cob-pad);        /* gap above the portrait = the card's own padding */
-  white-space: normal;
-}
-.cob__card-name { display: block; color: var(--color-merlot); }
-.cob__card-role {
-  display: block;
-  margin-top: .4rem;
-  color: var(--color-orange);
+  margin: 0 0 2.4rem;
   font-size: var(--cob-role-size);
   line-height: var(--cob-role-leading);
-  text-wrap: balance;                    /* titles too long for one line split evenly, never truncate */
+  font-weight: 500;
+  letter-spacing: -.02em;
 }
+.cob__card-name { display: block; color: var(--color-merlot); }
+.cob__card-role { display: block; color: var(--color-orange); text-wrap: balance; }
 
 .cob__close {
   position: absolute;
@@ -133,20 +148,11 @@
 
 .cob__card-body {
   display: grid;
-  grid-template-columns: var(--cob-portrait) 1fr;
+  grid-template-columns: min(var(--cob-portrait), var(--cob-portrait-max)) 1fr;
   column-gap: var(--cob-pad);
   align-items: start;
 }
 
-/* portrait + links: start over the name, slide down to reveal it (Leadership motion) */
-.cob__media {
-  position: relative;
-  z-index: 1;
-  margin-top: var(--cob-reveal, 10rem);
-  transform: translateY(calc(var(--cob-reveal, 10rem) * -1));
-  transition: transform .4s var(--cob-ease);
-}
-.cob__card.is-revealed .cob__media { transform: none; }
 .cob__portrait {
   position: relative;
   aspect-ratio: .7784431138;
@@ -154,18 +160,18 @@
 }
 .cob__portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
-/* "Additional information" links under the portrait (styled like the live Leadership cards) */
-.cob__links {
-  margin-top: 2.4rem;
-  color: var(--color-merlot);
-  opacity: 0;
-  transition: opacity .4s ease .1s;
-}
-.cob__card.is-revealed .cob__links { opacity: 1; }
+/* opening: the card grows (JS), the image fades in, the details rise in after it, the bio fades in */
+.cob__portrait { opacity: 0; transition: opacity .4s ease; }
+.cob__details { opacity: 0; transform: translateY(1.2rem); transition: opacity .4s ease .12s, transform .5s var(--cob-ease) .12s; }
+.cob__card.is-revealed .cob__portrait,
+.cob__card.is-revealed .cob__details { opacity: 1; transform: none; }
+
+/* "Additional information" links (styled like the live Leadership cards) */
+.cob__links { margin-top: 2.4rem; color: var(--color-merlot); }
 .cob__links-title {
   margin: 0 0 .8rem;
-  font-size: 1.6rem;
-  line-height: 3rem;
+  font-size: var(--cob-label);
+  line-height: 1.8;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -175,41 +181,41 @@
   align-items: center;
   gap: .8rem;
   color: var(--color-orange);
-  font-size: 1.8rem;                     /* same as the bio and its Department / Studio labels */
-  line-height: 2.4rem;
+  font-size: var(--cob-text);            /* same as the bio, department and location */
+  line-height: var(--cob-text-leading);
   text-decoration: none;
 }
-.cob__link svg { width: 1.4rem; height: 1.4rem; opacity: 0; transform: translateX(-.4rem); transition: opacity .2s, transform .2s; }
+.cob__link svg { width: .75em; height: .75em; opacity: 0; transform: translateX(-.4rem); transition: opacity .2s, transform .2s; }
 .cob__link:hover svg, .cob__link:focus-visible svg { opacity: 1; transform: none; }
 .cob__link:focus-visible { outline: 2px solid var(--color-orange); outline-offset: 2px; }
 
 .cob__bio {
   padding-right: 4.8rem;            /* clear of the close button */
+  max-width: 68ch;                  /* comfortable line length on wide cards */
   color: var(--color-merlot);
-  font-size: 1.8rem;
-  line-height: 2.4rem;
+  font-size: var(--cob-text);
+  line-height: var(--cob-text-leading);
   opacity: 0;
-  transition: opacity .4s ease .1s;
+  transition: opacity .4s ease .2s;
 }
 .cob__card.is-revealed .cob__bio { opacity: 1; }
 .cob__bio p { margin: 0 0 1em; }
 .cob__bio p:last-child { margin-bottom: 0; }
 .cob__bio-placeholder { opacity: .6; }
 
-.cob__meta { margin: 0 0 2.4rem; }
-.cob__meta div { display: flex; gap: .6em; }
+/* department + location, same size as the bio */
+.cob__meta { margin: 0; color: var(--color-merlot); font-size: var(--cob-text); line-height: var(--cob-text-leading); }
+.cob__meta div + div { margin-top: 1.2rem; }       /* label above value: column 1 can be narrow */
 .cob__meta dt { color: var(--color-orange); }
 .cob__meta dd { margin: 0; }
 
-/* narrow: stack portrait and bio */
+/* narrow: one column (image, details, then bio) */
 @media (max-width: 767px) {
-  .cob__card-head { position: static; width: auto; padding-right: 4.8rem; padding-bottom: 0; }
   .cob__card-body { display: block; }
-  .cob__media { margin-top: 1.6rem; transform: translateY(-2rem); }
   .cob__portrait { width: 70%; }
-  .cob__bio { margin-top: 2.4rem; padding-right: 0; }
+  .cob__bio { margin-top: 3.2rem; padding-right: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cob__line, .cob__media, .cob__links, .cob__link svg, .cob__bio, .cob__sort { transition: none; }
+  .cob__line, .cob__portrait, .cob__details, .cob__link svg, .cob__bio, .cob__sort { transition: none; }
 }

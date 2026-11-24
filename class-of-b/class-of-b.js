@@ -1,11 +1,16 @@
 /* Class Of — version B: sortable roster with expanding profile cards.
    Based on the "Team" mockups (Alphabetical / Department / Studio / Leadership).
+   - roster lines ("Name, Title") use typo-p2, the style of names and titles on
+     brandnewschool.com/contact, so they stay on one line
    - sort tabs regroup the roster; groups are balanced into two columns (one on mobile)
-   - clicking a name opens it in place as a white card, using the Leadership cards'
-     motion: the card grows (.4s, cubic-bezier(.25,1,.5,1)), the portrait slides down
-     to reveal name and role, and the bio fades in. One card is open at a time.
-   Data: class-of/people.js (dept, studio, leadership fields). Bios come from the
-   Leadership section's text when the person appears there; others get a placeholder.
+   - clicking a name opens it in place as a white card: the card grows (.4s,
+     cubic-bezier(.25,1,.5,1)), the image fades in, then name, title, department,
+     location and links rise in beneath it, with the bio fading in beside them.
+     One card is open at a time.
+   Data: class-of/people.js (`departments`, `studio`, `leadership`). Departments are the
+   official ones; a person with two appears under both. Executives (empty `departments`)
+   are shown in the Leadership section above, so they're left out here. Bios come from
+   the Leadership section's text when the person appears there; others get a placeholder.
 */
 (window.CLASS_OF_VERSIONS = window.CLASS_OF_VERSIONS || {}).b = {
   label: 'Sortable roster',
@@ -17,9 +22,10 @@
     const EASE = 'cubic-bezier(.25,1,.5,1)';
     const DUR = 400;
     const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const DEPT_ORDER = ['Executive Leadership', 'Creative', 'Design', 'Motion & Animation', 'CG & VFX', 'Editorial',
-      'Creative Technology', 'Production', 'Partnerships & Marketing', 'Operations'];
-    const STUDIO_ORDER = ['Los Angeles', 'New York', 'London'];
+    // official departments, in BNS order
+    const DEPT_ORDER = ['Brand & Strategy', 'Creative & Design', 'Motion & Content', 'Creative Tech',
+      'Project Management', 'Marketing & Partnerships', 'Operations'];
+    const STUDIO_ORDER = ['Los Angeles', 'New York', 'London', 'Remote'];
     const SORTS = [
       { key: 'alpha', label: 'Alphabetical' },
       { key: 'dept', label: 'Department' },
@@ -44,7 +50,12 @@
     // Same arrow as the live site's arrow links
     const ARROW = '<svg viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M24.1404 13H.975471M12.4056 1.29786 24.075 12.9672 12.4056 24.6366" stroke="currentColor" stroke-width="2"/></svg>';
 
-    const people = [...data.people].filter(p => p.name && p.role).sort((a, b) => a.name.localeCompare(b.name));
+    // executives (no department) already have cards in the Leadership section above
+    const people = [...data.people]
+      .filter(p => p.name && p.role && !(Array.isArray(p.departments) && p.departments.length === 0))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const deptsOf = p => (p.departments && p.departments.length ? p.departments : ['Other']);
+    let uid = 0; // a person can be listed twice (two departments), so card ids get a counter
 
     // ---------- markup ----------
     mount.classList.add('cob', 'container', 'spacer-xl');
@@ -76,15 +87,16 @@
     });
 
     function groupsFor(key) {
+      // fn returns one group key, or several (the person is listed in each)
       const by = (fn, order) => {
         const map = new Map();
-        people.forEach(p => { const k = fn(p); if (!map.has(k)) map.set(k, []); map.get(k).push(p); });
+        people.forEach(p => [].concat(fn(p)).forEach(k => { if (!map.has(k)) map.set(k, []); map.get(k).push(p); }));
         const keys = [...map.keys()];
         if (order) keys.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99));
         return keys.map(k => ({ title: k, people: map.get(k) }));
       };
       if (key === 'alpha') return by(p => p.name[0].toUpperCase());
-      if (key === 'dept') return by(p => p.dept || 'Other', DEPT_ORDER);
+      if (key === 'dept') return by(deptsOf, DEPT_ORDER);
       if (key === 'studio') return by(p => p.studio || 'Other', STUDIO_ORDER);
       const leaders = people.filter(p => p.leadership)
         .sort((a, b) => (leaderOrder.indexOf(a.name) + 1 || 99) - (leaderOrder.indexOf(b.name) + 1 || 99));
@@ -143,34 +155,36 @@
     function renderPerson(p) {
       const li = document.createElement('li');
       li.className = 'cob__person';
-      const id = `cob-${p.name.toLowerCase().replace(/[^a-z]+/g, '-')}`;
+      const id = `cob-${p.name.toLowerCase().replace(/[^a-z]+/g, '-')}-${++uid}`;
       const bio = leaderBios.get(p.name);
       // links: optional `links: [{label, href}]` in people.js, else the person's Leadership card links
       const links = p.links || leaderLinks.get(p.name) || [];
       li.innerHTML = `
-        <button type="button" class="cob__line typo-h3" aria-expanded="false" aria-controls="${id}">${p.name}, ${p.role}</button>
-        <div class="cob__card" id="${id}" role="region" aria-label="${p.name}">
-          <div class="cob__card-head typo-h3">
-            <span class="cob__card-name">${p.name}</span>
-            <span class="cob__card-role">${p.role}</span>
-          </div>
-          <button type="button" class="cob__close" aria-label="Close ${p.name}">
+        <button type="button" class="cob__line typo-p2" aria-expanded="false" aria-controls="${id}">${esc(p.name)}, ${esc(p.role)}</button>
+        <div class="cob__card" id="${id}" role="region" aria-label="${esc(p.name)}">
+          <button type="button" class="cob__close" aria-label="Close ${esc(p.name)}">
             <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M2 2l28 28M30 2L2 30" stroke="currentColor" stroke-width="2" fill="none"/></svg>
           </button>
           <div class="cob__card-body">
-            <div class="cob__media">
-              <div class="cob__portrait"><img alt="" src="${PORTRAIT}" style="object-position:${p.focus || '50% 50%'}"></div>
-              ${links.length ? `
-              <div class="cob__links">
-                <p class="cob__links-title">Additional information</p>
-                <ul>${links.map(l => `<li><a class="cob__link" href="${esc(l.href)}">${esc(l.label)}${ARROW}</a></li>`).join('')}</ul>
-              </div>` : ''}
+            <div class="cob__side">
+              <div class="cob__portrait"><img alt="" src="${PORTRAIT}" style="object-position:${esc(p.focus || '50% 50%')}"></div>
+              <div class="cob__details">
+                <p class="cob__card-head">
+                  <span class="cob__card-name">${esc(p.name)}</span>
+                  <span class="cob__card-role">${esc(p.role)}</span>
+                </p>
+                <dl class="cob__meta">
+                  <div><dt>Department</dt><dd>${esc(deptsOf(p).join(', '))}</dd></div>
+                  <div><dt>Location</dt><dd>${esc(p.studio || '—')}</dd></div>
+                </dl>
+                ${links.length ? `
+                <div class="cob__links">
+                  <p class="cob__links-title">Additional information</p>
+                  <ul>${links.map(l => `<li><a class="cob__link" href="${esc(l.href)}">${esc(l.label)}${ARROW}</a></li>`).join('')}</ul>
+                </div>` : ''}
+              </div>
             </div>
             <div class="cob__bio">
-              <dl class="cob__meta">
-                <div><dt>Department</dt><dd>${p.dept || '—'}</dd></div>
-                <div><dt>Studio</dt><dd>${p.studio || '—'}</dd></div>
-              </dl>
               ${bio && bio.length
                 ? bio.map(t => `<p>${t}</p>`).join('')
                 : `<p class="cob__bio-placeholder">Bio to come. Placeholder copy for the prototype.</p>`}
@@ -186,8 +200,15 @@
     // ---------- open / close ----------
     function toggle(li) {
       if (li === openItem) return close(li, true);
-      if (openItem) close(openItem);
-      open(li);
+      // a card closing above this one, in the same column, pulls it up by however much it shrinks
+      let shift = 0;
+      if (openItem) {
+        const prev = openItem;
+        const shrink = close(prev);
+        const above = prev.compareDocumentPosition(li) & Node.DOCUMENT_POSITION_FOLLOWING;
+        if (above && prev.closest('.cob__col') === li.closest('.cob__col')) shift = shrink;
+      }
+      open(li, shift);
     }
 
     function animateHeight(li, from, to, done) {
@@ -197,23 +218,23 @@
       a.onfinish = () => done?.();
     }
 
-    function open(li) {
+    function open(li, shift = 0) {
       const from = li.offsetHeight;
       li.classList.add('is-open');
       li.querySelector('.cob__line').setAttribute('aria-expanded', 'true');
       const card = li.querySelector('.cob__card');
-      // head height includes its bottom padding (--cob-pad), so the portrait settles one card-padding below the title
-      const reveal = li.querySelector('.cob__card-head').offsetHeight;
-      li.style.setProperty('--cob-reveal', `${reveal}px`);
       const to = li.offsetHeight;
       openItem = li;
-      // portrait starts over the name and slides down; bio fades in (Leadership card motion)
+      // card grows; image fades in, details rise in under it, bio fades in (CSS, on .is-revealed)
       requestAnimationFrame(() => card.classList.add('is-revealed'));
       animateHeight(li, from, to);
-      // keep the card in view
-      const r = li.getBoundingClientRect();
-      if (r.top + to > innerHeight - 24 || r.top < 80) {
-        const target = scrollY + r.top - Math.max(120, (innerHeight - to) / 2);
+      // keep the card in view: work out where its top will be once a card closing above it has
+      // finished shrinking (`shift`, from toggle), then scroll so it sits below the nav
+      const cardRect = card.getBoundingClientRect();
+      const top = cardRect.top - shift;
+      const h = to - (cardRect.top - li.getBoundingClientRect().top); // card + its bottom margin
+      if (top + h > innerHeight - 24 || top < 80) {
+        const target = scrollY + top - Math.max(120, (innerHeight - h) / 2);
         scrollTo({ top: Math.max(0, target), behavior: reduceMotion ? 'auto' : 'smooth' });
       }
     }
@@ -232,6 +253,7 @@
         li.classList.remove('is-closing');
         if (refocus) line.focus({ preventScroll: true });
       });
+      return from - to; // how much it shrinks
     }
 
     setSort('alpha', true);
